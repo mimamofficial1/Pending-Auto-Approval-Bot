@@ -504,8 +504,11 @@ async def approve_requests_internal(chat_id: int, admin_id: int, num_requests: i
             f"⚠️ Too Many Channels: `{stats['too_many_channels_count']}`\n"
             f"❗️ Deactivated: `{stats['deactivated_count']}`\n"
             f"❌ Failed: `{stats['skipped_count']}`\n\n"
-            f"**Total Processed:** `{sum([stats['approved_count'], stats['already_member_count'], stats['too_many_channels_count'], stats['deactivated_count'], stats['skipped_count']])`"
-        )
+            completion_text = (
+    f"✅ **Approval Process Completed!**\n\n"
+    f"✅ Approved: `{stats['approved_count']}`\n"
+    ...
+)
         
         await bot.send_message(
             chat_id=admin_id,
