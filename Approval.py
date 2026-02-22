@@ -439,6 +439,87 @@ async def send_log(client, message, action_type=None, extra_info=None):
     except Exception as e:
         logger.error(f"Error sending log to group: {str(e)}")
 
+async def approve_requests_internal(chat_id: int, admin_id: int, num_requests: int = None):
+    """
+    Approve pending join requests in a chat
+    
+    Args:
+        chat_id: ID of the chat to process
+        admin_id: ID of the admin who requested approval
+        num_requests: Optional limit on number of requests to approve
+        
+    Returns:
+        Dictionary with approval statistics
+    """
+    stats = {
+        "approved_count": 0,
+        "already_member_count": 0,
+        "too_many_channels_count": 0,
+        "deactivated_count": 0,
+        "skipped_count": 0
+    }
+    
+    try:
+        # Get pending join requests
+        pending_requests = await user.get_chat_join_requests(chat_id, limit=num_requests if num_requests else 100)
+        
+        approved = 0
+        
+        async for request in pending_requests:
+            try:
+                await user.approve_chat_join_request(chat_id, request.user.id)
+                stats["approved_count"] += 1
+                approved += 1
+                
+                # Store approved user data
+                try:
+                    await store_approved_user(
+                        user=request.user,
+                        chat=request.chat,
+                        approval_type="manual_approval"
+                    )
+                except Exception as e:
+                    logger.warning(f"Could not store approved user data: {str(e)}")
+                
+                if num_requests and approved >= num_requests:
+                    break
+                    
+            except Exception as e:
+                error_msg = str(e).lower()
+                if "already_member" in error_msg or "user_already_participant" in error_msg:
+                    stats["already_member_count"] += 1
+                elif "too_many_channels" in error_msg:
+                    stats["too_many_channels_count"] += 1
+                elif "deactivated" in error_msg or "user_deactivated" in error_msg:
+                    stats["deactivated_count"] += 1
+                else:
+                    stats["skipped_count"] += 1
+                logger.warning(f"Failed to approve request for user {request.user.id}: {str(e)}")
+        
+        # Send completion message to admin
+        completion_text = (
+            f"✅ **Approval Process Completed!**\n\n"
+            f"✅ Approved: `{stats['approved_count']}`\n"
+            f"ℹ️ Already Members: `{stats['already_member_count']}`\n"
+            f"⚠️ Too Many Channels: `{stats['too_many_channels_count']}`\n"
+            f"❗️ Deactivated: `{stats['deactivated_count']}`\n"
+            f"❌ Failed: `{stats['skipped_count']}`\n\n"
+            f"**Total Processed:** `{sum([stats['approved_count'], stats['already_member_count'], stats['too_many_channels_count'], stats['deactivated_count'], stats['skipped_count']])`"
+        )
+        
+        await bot.send_message(
+            chat_id=admin_id,
+            text=completion_text,
+            parse_mode=enums.ParseMode.MARKDOWN
+        )
+        
+        logger.info(f"Approval process completed for chat {chat_id}: {stats}")
+        return stats
+        
+    except Exception as e:
+        logger.error(f"Error in approve_requests_internal: {str(e)}")
+        raise
+
 async def is_chat_authorized(chat_id: int) -> bool:
     """Check if a chat is authorized in MongoDB"""
     chat_doc = chats_collection.find_one({"chat_id": chat_id})
@@ -862,8 +943,6 @@ async def approve_requests(client, message):
     except Exception as e:
         logger.error(f"Error in approve_requests: {str(e)}")
         await message.reply("An unexpected error occurred. Please try again later.")
-
-#async def approve_requests_internal(chat_id: int, admin_id: int, num_requests: int = None): skipped
 
 @bot.on_message(filters.command("auth") & filters.private)
 @handle_flood_wait
