@@ -83,7 +83,7 @@ async def change_string_session(client: Client, message: Message):
     """Handle changing the assistant's session string"""
     try:
         # Check if user is authorized (bot owner)
-        if message.from_user.id != 1949883614:  # Your user ID
+        if message.from_user.id != 8512604416:  # Your user ID
             await message.reply_text("⛔️ This command is only for the bot owner.")
             return
 
@@ -966,11 +966,11 @@ async def handle_join_request(client, request):
                             "ᴘʟᴇᴀꜱᴇ ᴄᴏɴꜱɪᴅᴇʀ ᴊᴏɪɴɪɴɢ ᴏᴜʀ ꜱᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ ᴀꜱ ᴡᴇʟʟ."
             
             keyboard = InlineKeyboardMarkup([
-                [InlineKeyboardButton("Join Support Channel", url="https://t.me/SmokieOfficial")]
+                [InlineKeyboardButton("Join Support Channel", url="https://t.me/Mrn_Officialx")]
             ])
 
             try:
-                gif_url = "https://cdn.glitch.global/04a38d5f-8c30-452e-b709-33da5c74b12d/175446-853577055.mp4?v=1732257487908"
+                gif_url = "https://files.catbox.moe/jwxzaf.jpg"
                 await bot.send_animation(
                     chat_id=user_id,
                     animation=gif_url,
@@ -1025,14 +1025,14 @@ async def start_command(client: Client, message: Message):
         [InlineKeyboardButton("➕ Add me to your channel", url=f"https://t.me/{bot_username}?startchannel=true")],
         [InlineKeyboardButton("➕ Add me to your Group", url=f"https://t.me/{bot_username}?startgroup=true")],
         [
-            InlineKeyboardButton("👥 Support", url="https://t.me/BotCodeVerse"),
-            InlineKeyboardButton("👨‍💻 Owner", url="https://t.me/Hmm_Smokie")
+            InlineKeyboardButton("👥 Support", url="https://t.me/Mrn_Officialx"),
+            InlineKeyboardButton("👨‍💻 Owner", url="https://t.me/MRN_CONTACT_BOT")
         ]
     ])
         # Send welcome video with caption
         await client.send_video(
             chat_id=message.chat.id,
-            video="https://cdn.glitch.global/94c1411f-81f7-4957-8c81-6e2e5285e45c/201734-916310639_medium.mp4?v=1736459660788",
+            video="https://files.catbox.moe/jwxzaf.jpg",
             caption=start_message,
             reply_markup=keyboard
         )
@@ -1159,7 +1159,7 @@ async def broadcast_handler(client: Client, message: Message):
     """Handle the broadcast command"""
     try:
         # Check if user is authorized
-        if message.from_user.id != 1949883614:  # Replace with your user ID
+        if message.from_user.id != 8512604416:  # Replace with your user ID
             await message.reply_text("⛔️ This command is only for the bot owner.")
             return
 
