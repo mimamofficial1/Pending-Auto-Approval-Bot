@@ -970,7 +970,7 @@ async def handle_join_request(client, request):
             ])
 
             try:
-                gif_url = "https://files.catbox.moe/jwxzaf.jpg"
+                gif_url = "https://cdn.glitch.global/04a38d5f-8c30-452e-b709-33da5c74b12d/175446-853577055.mp4?v=1732257487908"
                 await bot.send_animation(
                     chat_id=user_id,
                     animation=gif_url,
@@ -1032,7 +1032,7 @@ async def start_command(client: Client, message: Message):
         # Send welcome video with caption
         await client.send_video(
             chat_id=message.chat.id,
-            video="https://files.catbox.moe/jwxzaf.jpg",
+            video="https://cdn.glitch.global/94c1411f-81f7-4957-8c81-6e2e5285e45c/201734-916310639_medium.mp4?v=1736459660788",
             caption=start_message,
             reply_markup=keyboard
         )
