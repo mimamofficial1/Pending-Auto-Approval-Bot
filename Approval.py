@@ -863,7 +863,61 @@ async def approve_requests(client, message):
         logger.error(f"Error in approve_requests: {str(e)}")
         await message.reply("An unexpected error occurred. Please try again later.")
 
-#async def approve_requests_internal(chat_id: int, admin_id: int, num_requests: int = None): skipped
+async def approve_requests_internal(chat_id: int, admin_id: int, num_requests: int = None):
+    approved_count = 0
+    already_member_count = 0
+    too_many_channels_count = 0
+    deactivated_count = 0
+    skipped_count = 0
+
+    try:
+        join_requests = []
+
+        async for req in user.get_chat_join_requests(chat_id):
+            join_requests.append(req)
+
+            if num_requests and len(join_requests) >= num_requests:
+                break
+
+        if not join_requests:
+            await bot.send_message(admin_id, "ℹ️ No pending join requests found.")
+            return {}
+
+        for request in join_requests:
+            try:
+                await user.approve_chat_join_request(chat_id, request.from_user.id)
+                approved_count += 1
+
+                await store_approved_user(
+                    user=request.from_user,
+                    chat=await user.get_chat(chat_id),
+                    approval_type="manual_approval"
+                )
+
+            except Exception:
+                skipped_count += 1
+
+        await bot.send_message(
+            admin_id,
+            f"✅ Approval Completed!\n\n"
+            f"Approved: {approved_count}\n"
+            f"Already Member: {already_member_count}\n"
+            f"Deactivated: {deactivated_count}\n"
+            f"Failed: {skipped_count}"
+        )
+
+        return {
+            "approved_count": approved_count,
+            "already_member_count": already_member_count,
+            "too_many_channels_count": too_many_channels_count,
+            "deactivated_count": deactivated_count,
+            "skipped_count": skipped_count
+        }
+
+    except Exception as e:
+        logger.error(f"Internal approval error: {e}")
+        await bot.send_message(admin_id, f"❌ Approval failed: {str(e)}")
+        raise
 
 @bot.on_message(filters.command("auth") & filters.private)
 @handle_flood_wait
