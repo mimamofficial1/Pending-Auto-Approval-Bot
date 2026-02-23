@@ -863,7 +863,64 @@ async def approve_requests(client, message):
         logger.error(f"Error in approve_requests: {str(e)}")
         await message.reply("An unexpected error occurred. Please try again later.")
 
-#async def approve_requests_internal(chat_id: int, admin_id: int, num_requests: int = None): skipped
+# --- Ye naya function add karo jo missing tha ---
+async def approve_requests_internal(chat_id: int, admin_id: int, num_requests: int = None):
+    """
+    Internal function to process join requests using the assistant account.
+    """
+    approved_count = 0
+    already_member_count = 0
+    failed_count = 0
+    
+    try:
+        # Get pending requests using Assistant Client (user)
+        async for request in user.get_chat_join_requests(chat_id):
+            # Agar num_requests limit set hai toh check karein
+            if num_requests and approved_count >= num_requests:
+                break
+                
+            try:
+                await user.approve_chat_join_request(chat_id, request.from_user.id)
+                approved_count += 1
+                
+                # Database mein store karein
+                await store_approved_user(
+                    user=request.from_user,
+                    chat=await bot.get_chat(chat_id),
+                    approval_type="manual_approval"
+                )
+                
+                # Rate limit se bachne ke liye chota delay
+                await asyncio.sleep(1) 
+                
+            except Exception as e:
+                logger.error(f"Failed to approve {request.from_user.id}: {e}")
+                failed_count += 1
+
+        # Final stats message bhejna Admin ko
+        stats_text = (
+            "✅ **Approval Task Completed!**\n\n"
+            f"👤 **Approved:** {approved_count}\n"
+            f"❌ **Failed:** {failed_count}\n"
+            f"ℹ️ **Chat ID:** `{chat_id}`"
+        )
+        await bot.send_message(chat_id=admin_id, text=stats_text)
+        
+        return {
+            "approved_count": approved_count,
+            "skipped_count": failed_count
+        }
+
+    except Exception as e:
+        logger.error(f"Error in internal approval: {str(e)}")
+        raise e
+
+# --- Aapka existing /approve command (isme koi change nahi hai, bas reference ke liye) ---
+@bot.on_message(filters.command('approve') & filters.private)
+@handle_flood_wait
+async def approve_requests(client, message):
+    # ... (Aapka baaki code jo upar tha) ...
+    # Ye part ab kaam karega kyunki upar function define ho gaya hai.
 
 @bot.on_message(filters.command("auth") & filters.private)
 @handle_flood_wait
