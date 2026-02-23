@@ -863,8 +863,42 @@ async def approve_requests(client, message):
         logger.error(f"Error in approve_requests: {str(e)}")
         await message.reply("An unexpected error occurred. Please try again later.")
 
-#async def approve_requests_internal(chat_id: int, admin_id: int, num_requests: int = None): skipped
+async def approve_requests_internal(chat_id: int, admin_id: int, num_requests: int = None):
+    approved_count = 0
+    failed_count = 0
 
+    try:
+        join_requests = []
+
+        # 🔥 IMPORTANT — BOT se fetch karo
+        async for req in bot.get_chat_join_requests(chat_id):
+            join_requests.append(req)
+            if num_requests and len(join_requests) >= num_requests:
+                break
+
+        if not join_requests:
+            await bot.send_message(admin_id, "ℹ️ No pending join requests found.")
+            return
+
+        for request in join_requests:
+            try:
+                # 🔥 BOT se approve karo
+                await bot.approve_chat_join_request(chat_id, request.from_user.id)
+                approved_count += 1
+            except Exception as e:
+                print("Approval Error:", e)
+                failed_count += 1
+
+        await bot.send_message(
+            admin_id,
+            f"✅ Approval Completed!\n\n"
+            f"Approved: {approved_count}\n"
+            f"Failed: {failed_count}"
+        )
+
+    except Exception as e:
+        print("Internal Error:", e)
+        await bot.send_message(admin_id, f"❌ Approval failed: {str(e)}")
 @bot.on_message(filters.command("auth") & filters.private)
 @handle_flood_wait
 async def authorize_chat(client, message):
