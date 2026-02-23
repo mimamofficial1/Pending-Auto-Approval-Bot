@@ -885,7 +885,7 @@ async def approve_requests_internal(chat_id: int, admin_id: int, num_requests: i
 
         for request in join_requests:
             try:
-                await user.approve_chat_join_request(chat_id, request.from_user.id)
+                await bot.approve_chat_join_request(chat_id, request.from_user.id)
                 approved_count += 1
 
                 await store_approved_user(
